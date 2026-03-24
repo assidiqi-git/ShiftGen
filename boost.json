@@ -1,0 +1,11 @@
+{
+    "agents": [
+        "gemini"
+    ],
+    "skills": [
+        "fluxui-development",
+        "livewire-development",
+        "pest-testing",
+        "tailwindcss-development"
+    ]
+}

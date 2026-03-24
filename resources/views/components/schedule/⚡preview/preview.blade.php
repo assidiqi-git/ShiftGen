@@ -1,0 +1,269 @@
+<div x-data="schedulePreview()" x-on:dragover.prevent x-on:drop="handleDrop($event, null, null)">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Preview Jadwal</h1>
+            <p class="page-subtitle">Lihat, ubah, dan publish jadwal shift pegawai</p>
+        </div>
+        <div class="header-actions">
+            @if ($hasDrafts)
+                <button wire:click="publishAll" class="btn btn-success" id="btn-publish">
+                    <span wire:loading.remove wire:target="publishAll">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                        </svg>
+                        Publish Semua
+                    </span>
+                    <span wire:loading wire:target="publishAll">Publishing...</span>
+                </button>
+            @endif
+            <button id="btn-export-png" class="btn btn-secondary" x-on:click="exportPng()">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                </svg>
+                Export PNG
+            </button>
+        </div>
+    </div>
+
+    {{-- Date Range Filter --}}
+    <div class="filter-bar">
+        <div class="form-row">
+            <div class="form-group-inline">
+                <label class="form-label" for="preview-from">Dari</label>
+                <input id="preview-from" type="date" wire:model.live="date_from" class="form-input form-input-sm" />
+            </div>
+            <div class="form-group-inline">
+                <label class="form-label" for="preview-to">Sampai</label>
+                <input id="preview-to" type="date" wire:model.live="date_to" class="form-input form-input-sm" />
+            </div>
+        </div>
+    </div>
+
+    {{-- Schedule Grid --}}
+    <div class="card mb-5">
+        <div class="table-wrap" id="schedule-grid">
+            <table class="schedule-table" id="schedule-grid-table">
+                <thead>
+                    <tr>
+                        <th class="shift-header-cell">Shift</th>
+                        @foreach ($dates as $date)
+                            <th class="date-header-cell">
+                                <span class="date-day">{{ $date->translatedFormat('D') }}</span>
+                                <span class="date-num">{{ $date->format('d') }}</span>
+                                <span class="date-month">{{ $date->translatedFormat('M') }}</span>
+                            </th>
+                        @endforeach
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach ($shifts as $shift)
+                        <tr wire:key="shift-row-{{ $shift->id }}">
+                            <td class="shift-label-cell">
+                                <div class="shift-label">
+                                    <span class="shift-name">{{ $shift->name }}</span>
+                                    <span
+                                        class="shift-time">{{ \Carbon\Carbon::createFromFormat('H:i', $shift->start_time)->format('H:i') }}
+                                        –
+                                        {{ \Carbon\Carbon::createFromFormat('H:i', $shift->end_time)->format('H:i') }}</span>
+                                </div>
+                            </td>
+                            @foreach ($dates as $date)
+                                @php $dateKey = $date->toDateString(); @endphp
+                                <td class="schedule-cell" x-on:dragover.prevent="highlightDrop($event)"
+                                    x-on:dragleave="unhighlightDrop($event)"
+                                    x-on:drop.stop="handleDrop($event, {{ $shift->id }}, '{{ $dateKey }}',{{ $grid[$shift->id][$dateKey]->first()?->id ?? 'null' }})"
+                                    data-shift="{{ $shift->id }}" data-date="{{ $dateKey }}">
+                                    @foreach ($grid[$shift->id][$dateKey] as $schedule)
+                                        @php
+                                            $employeeColor = $schedule->employee?->color ?? '#60a5fa';
+                                            $hex = ltrim($employeeColor, '#');
+                                            if (strlen($hex) !== 6) {
+                                                $hex = '60a5fa';
+                                                $employeeColor = '#60a5fa';
+                                            }
+                                            $r = hexdec(substr($hex, 0, 2));
+                                            $g = hexdec(substr($hex, 2, 2));
+                                            $b = hexdec(substr($hex, 4, 2));
+                                            $bgAlpha = $schedule->status === 'published' ? 0.22 : 0.16;
+                                            $bg = "rgba({$r}, {$g}, {$b}, {$bgAlpha})";
+                                            $border = "rgba({$r}, {$g}, {$b}, 0.28)";
+                                        @endphp
+                                        <div class="employee-card {{ $schedule->status === 'published' ? 'published' : 'draft' }} {{ $schedule->is_overtime ? 'overtime' : '' }}"
+                                            wire:key="schedule-{{ $schedule->id }}" draggable="true"
+                                            x-on:dragstart="startDrag($event, {{ $schedule->id }}, '{{ $dateKey }}')"
+                                            x-on:dragend="endDrag($event)" id="schedule-card-{{ $schedule->id }}"
+                                            style="background: {{ $bg }}; border-color: {{ $border }}; border-left: 4px solid {{ $employeeColor }}; color: var(--text-primary);">
+                                            <span class="employee-name">{{ $schedule->employee?->name ?? '—' }}</span>
+                                            @if ($schedule->is_overtime)
+                                                <span class="overtime-badge">OT</span>
+                                            @endif
+                                            @if ($schedule->status === 'published')
+                                                <span class="status-dot published-dot" title="Published"></span>
+                                            @else
+                                                <span class="status-dot draft-dot" title="Draft"></span>
+                                            @endif
+                                        </div>
+                                    @endforeach
+                                </td>
+                            @endforeach
+                        </tr>
+                    @endforeach
+                    @if ($shifts->isEmpty())
+                        <tr>
+                            <td colspan="32" class="empty-state">
+                                Belum ada shift atau jadwal. <a href="{{ route('schedule.generate') }}"
+                                    wire:navigate>Generate sekarang →</a>
+                            </td>
+                        </tr>
+                    @endif
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {{-- Summary Card --}}
+    <div class="card">
+        <div class="card-body">
+            <div class="info-title">Summary Shift Per Pegawai</div>
+            <div class="table-wrap">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Pegawai</th>
+                            <th>Shift Normal</th>
+                            <th>Shift Lembur</th>
+                            <th>Total Shift</th>
+                            <th>Total Jam</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($employeeSummaries as $summary)
+                            <tr wire:key="employee-summary-{{ $summary['id'] }}">
+                                <td class="font-medium">
+                                    <span class="badge"
+                                        style="background: {{ $summary['color'] ?? '#60a5fa' }}; color: transparent; padding: 0; width: 10px; height: 10px;"></span>
+                                    {{ $summary['name'] ?? '—' }}
+                                </td>
+                                <td>
+                                    <span class="badge badge-green">{{ $summary['normal_count'] ?? 0 }} normal</span>
+                                </td>
+                                <td>
+                                    <span class="badge badge-warning">{{ $summary['overtime_count'] ?? 0 }} lembur</span>
+                                </td>
+                                <td>
+                                    <span class="badge badge-blue">{{ $summary['shift_count'] ?? 0 }} shift</span>
+                                </td>
+                                <td>
+                                    <span
+                                        class="badge badge-purple">{{ number_format((float) ($summary['total_hours'] ?? 0), 2) }}
+                                        jam</span>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="5" class="empty-state">Belum ada jadwal pada rentang tanggal ini.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+
+</div>
+@script
+<script>
+    Alpine.data('schedulePreview', () => ({
+        draggingId: null,
+        sourceDate: null,
+
+        startDrag(event, scheduleId, date) {
+            this.draggingId = scheduleId;
+            this.sourceDate = date;
+            event.target.classList.add('dragging');
+            event.dataTransfer.effectAllowed = 'move';
+        },
+
+        endDrag(event) {
+            event.target.classList.remove('dragging');
+        },
+
+        highlightDrop(event) {
+            event.currentTarget.classList.add('drop-target');
+        },
+
+        unhighlightDrop(event) {
+            event.currentTarget.classList.remove('drop-target');
+        },
+
+        handleDrop(event, shiftId, date, targetScheduleId = null) {
+            event.currentTarget?.classList?.remove('drop-target');
+            if (!this.draggingId || !shiftId || !date) return;
+
+            const draggedId = this.draggingId;
+
+            // Reset state setelah drop
+            this.draggingId = null;
+            this.sourceDate = null;
+
+            if (targetScheduleId && targetScheduleId !== draggedId) {
+                this.$wire.swapSchedule(draggedId, targetScheduleId);
+            } else {
+                this.$wire.updateSchedule(draggedId, shiftId, date);
+            }
+        },
+
+        exportPng() {
+            if (typeof html2canvas !== 'undefined') {
+                const el = document.getElementById('schedule-grid-table');
+                html2canvas(el, { scale: 2, useCORS: true }).then(canvas => {
+                    const link = document.createElement('a');
+                    link.download = 'jadwal-shift.png';
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                });
+            } else {
+                alert('Library html2canvas belum dimuat. Pastikan npm run build sudah dijalankan.');
+            }
+        },
+    }));
+
+    const showSchedulePreviewToast = (payload) => {
+        if (!window.Toastify) return;
+
+        const message = payload?.message ?? payload;
+        const type = payload?.type ?? 'info';
+        const isSuccess = type === 'success';
+
+        if (!message) return;
+
+        window.Toastify({
+            text: message,
+            duration: 4000,
+            close: true,
+            gravity: 'top',
+            position: 'right',
+            stopOnFocus: true,
+            style: {
+                background: isSuccess ?
+                    'linear-gradient(to right, #16a34a, #22c55e)' :
+                    'linear-gradient(to right, #dc2626, #ef4444)',
+            },
+        }).showToast();
+    };
+
+    if (window.Livewire) {
+        Livewire.on('schedule-preview-toast', showSchedulePreviewToast);
+    } else {
+        document.addEventListener('livewire:init', () => {
+            if (!window.Livewire) return;
+            Livewire.on('schedule-preview-toast', showSchedulePreviewToast);
+        });
+    }
+</script>
+@endscript
