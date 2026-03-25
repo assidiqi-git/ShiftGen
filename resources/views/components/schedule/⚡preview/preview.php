@@ -2,6 +2,7 @@
 
 use App\Models\Employee;
 use App\Models\Schedule;
+use App\Models\ScheduleSet;
 use App\Models\Shift;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -13,10 +14,26 @@ new class extends Component
 
     public string $date_to = '';
 
+    public ?int $schedule_set_id = null;
+
     public function mount(): void
     {
         $this->date_from = now()->startOfWeek()->subDay()->toDateString();
         $this->date_to = now()->endOfWeek()->addDay()->toDateString();
+
+        $setId = request()->query('set');
+        if (! $setId) {
+            abort(404);
+        }
+
+        $set = ScheduleSet::find($setId);
+        if (! $set) {
+            abort(404);
+        }
+
+        $this->schedule_set_id = $set->id;
+        $this->date_from = $set->date_from->toDateString();
+        $this->date_to = $set->date_to->toDateString();
     }
 
     private function toast(string $message, bool $success = true): void
@@ -226,9 +243,14 @@ new class extends Component
 
     public function publishAll(): void
     {
-        Schedule::whereBetween('date', [$this->date_from, $this->date_to])
+        Schedule::when($this->schedule_set_id !== null, fn ($q) => $q->where('schedule_set_id', $this->schedule_set_id))
+            ->whereBetween('date', [$this->date_from, $this->date_to])
             ->draft()
             ->update(['status' => 'published']);
+
+        if ($this->schedule_set_id) {
+            ScheduleSet::whereKey($this->schedule_set_id)->update(['status' => 'published']);
+        }
 
         $this->toast('Jadwal berhasil dipublish.', true);
     }
@@ -251,6 +273,7 @@ new class extends Component
 
         // Load schedules indexed by [shift_id][date]
         $schedulesRaw = Schedule::with(['employee', 'shift'])
+            ->when($this->schedule_set_id !== null, fn ($q) => $q->where('schedule_set_id', $this->schedule_set_id))
             ->whereBetween('date', [$this->date_from, $this->date_to])
             ->get();
 

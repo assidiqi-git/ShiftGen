@@ -1,6 +1,7 @@
 <?php
 
 use App\Exceptions\ScheduleConflictException;
+use App\Models\ScheduleSet;
 use App\Models\Shift;
 use App\Services\ScheduleGeneratorService;
 use Carbon\Carbon;
@@ -51,7 +52,13 @@ new class extends Component
 
         try {
             $shiftCount = Shift::count();
-            app(ScheduleGeneratorService::class)->generate($from, $to);
+            $set = ScheduleSet::create([
+                'name' => 'Jadwal '.$from->toDateString().' – '.$to->toDateString(),
+                'date_from' => $from->toDateString(),
+                'date_to' => $to->toDateString(),
+                'status' => 'draft',
+            ]);
+            app(ScheduleGeneratorService::class)->generate($from, $to, $set->id);
             $this->generated = $days * $shiftCount;
             $this->success = true;
         } catch (ScheduleConflictException $e) {

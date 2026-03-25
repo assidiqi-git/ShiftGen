@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Schedule extends Model
 {
-    protected $fillable = ['employee_id', 'shift_id', 'date', 'is_overtime', 'status'];
+    protected $fillable = ['employee_id', 'shift_id', 'date', 'is_overtime', 'status', 'schedule_set_id'];
 
     protected $casts = [
         'date' => 'date',
@@ -23,6 +23,11 @@ class Schedule extends Model
     public function shift(): BelongsTo
     {
         return $this->belongsTo(Shift::class);
+    }
+
+    public function scheduleSet(): BelongsTo
+    {
+        return $this->belongsTo(ScheduleSet::class);
     }
 
     public function scopeDraft(Builder $query): Builder

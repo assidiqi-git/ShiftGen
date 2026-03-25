@@ -625,6 +625,10 @@ body.app-body {
     max-width: 380px;
 }
 
+.modal-card-xl {
+    max-width: 60%;
+}
+
 @keyframes slideUp {
     from {
         transform: translateY(16px);

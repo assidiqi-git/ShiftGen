@@ -17,7 +17,7 @@ class ScheduleGeneratorService
     /** @var Collection<int, Employee> */
     private Collection $employees;
 
-    public function generate(Carbon $from, Carbon $to): void
+    public function generate(Carbon $from, Carbon $to, ?int $scheduleSetId = null): void
     {
         $this->shifts = Shift::orderBy('sort_order')->get();
         $this->employees = Employee::all();
@@ -37,19 +37,22 @@ class ScheduleGeneratorService
 
         $current = $from->copy()->startOfDay();
         while ($current->lte($to)) {
-            $this->generateForDay($current->copy(), $workHours);
+            $this->generateForDay($current->copy(), $workHours, $scheduleSetId);
             $current->addDay();
         }
     }
 
     /** @param array<int, float> $workHours */
-    private function generateForDay(Carbon $date, array &$workHours): void
+    private function generateForDay(Carbon $date, array &$workHours, ?int $scheduleSetId = null): void
     {
         $shiftCount = $this->shifts->count();
         $employeeCount = $this->employees->count();
 
-        // Delete any existing draft schedules for this date before regenerating
-        Schedule::where('date', $date->toDateString())->draft()->delete();
+        // Delete any existing draft schedules for this date (scoped by schedule set if provided) before regenerating
+        Schedule::when($scheduleSetId !== null, fn ($q) => $q->where('schedule_set_id', $scheduleSetId))
+            ->where('date', $date->toDateString())
+            ->draft()
+            ->delete();
 
         // We need to assign at least one employee per shift.
         // If we have fewer employees than shifts, overtime kicks in.
@@ -65,6 +68,7 @@ class ScheduleGeneratorService
                 'date' => $date->toDateString(),
                 'is_overtime' => $isOvertime,
                 'status' => 'draft',
+                'schedule_set_id' => $scheduleSetId,
             ]);
 
             $workHours[$employeeId] += (float) $shift->duration_hours;

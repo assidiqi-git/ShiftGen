@@ -7,7 +7,7 @@
         <div class="header-actions">
             @if ($hasDrafts)
                 <button wire:click="publishAll" class="btn btn-success" id="btn-publish">
-                    <span wire:loading.remove wire:target="publishAll">
+                    <span wire:loading.remove wire:target="publishAll" class="flex items-center justify-between gap-2">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
                             stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round"
