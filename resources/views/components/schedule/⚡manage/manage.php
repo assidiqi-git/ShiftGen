@@ -4,8 +4,7 @@ use App\Models\ScheduleSet;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-new class extends Component
-{
+new class extends Component {
     use WithPagination;
 
     public ?int $deletingId = null;
@@ -21,9 +20,14 @@ new class extends Component
     {
         if ($this->deletingId) {
             ScheduleSet::findOrFail($this->deletingId)->delete();
-            session()->flash('success', 'Jadwal berhasil dihapus.');
+            $this->toast('Jadwal berhasil dihapus.', true);
         }
         $this->deletingId = null;
+    }
+
+    private function toast(string $message, bool $success = true): void
+    {
+        $this->dispatch('toast-show', message: $message, type: $success ? 'success' : 'error');
     }
 
     public function with(): array

@@ -13,7 +13,8 @@
                     d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
             </svg>
             Berhasil membuat <strong>{{ $generated }} slot jadwal</strong> (draft).
-            <a href="{{ route('schedule.preview', ['scheduleSet' => $created_set_id]) }}" wire:navigate class="alert-link">Lihat Preview →</a>
+            <a href="{{ route('schedule.preview', ['scheduleSet' => $created_set_id]) }}" wire:navigate
+                class="alert-link">Lihat Preview →</a>
         </div>
     @endif
 
@@ -53,6 +54,36 @@
                     </div>
                 </div>
 
+                <div class="form-group">
+                    <label class="form-label">Pilih Pegawai</label>
+                    <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 10px;">
+                        <button type="button" wire:click="selectAllEmployees" class="btn btn-secondary btn-sm">
+                            Pilih Semua
+                        </button>
+                        <button type="button" wire:click="clearSelectedEmployees" class="btn btn-secondary btn-sm">
+                            Kosongkan
+                        </button>
+                        <span class="text-secondary" style="font-size: 13px;">
+                            Terpilih: {{ count($employee_ids) }} / {{ $employees->count() }}
+                        </span>
+                    </div>
+                    <div
+                        style="border: 1px solid var(--border); border-radius: 12px; padding: 12px; max-height: 260px; overflow: auto;">
+                        @forelse ($employees as $employee)
+                            <label wire:key="employee-checkbox-{{ $employee->id }}"
+                                style="display: flex; align-items: center; gap: 10px; padding: 6px 2px;">
+                                <input type="checkbox" wire:model="employee_ids" value="{{ $employee->id }}" />
+                                <span
+                                    style="width: 10px; height: 10px; border-radius: 9999px; background: {{ $employee->color ?? '#00ADB5' }}; display: inline-block;"></span>
+                                <span>{{ $employee->name }}</span>
+                            </label>
+                        @empty
+                            <div class="text-secondary">Belum ada pegawai. Tambahkan pegawai terlebih dahulu.</div>
+                        @endforelse
+                    </div>
+                    @error('employee_ids') <span class="form-error">{{ $message }}</span> @enderror
+                </div>
+
                 <div class="info-box">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                         stroke="currentColor">
@@ -65,6 +96,7 @@
                             <li>Setiap shift harian mendapat tepat 1 pegawai</li>
                             <li>Overtime otomatis jika pegawai &lt; shift (memilih pegawai jam kerja terkecil)</li>
                             <li>Pegawai tidak boleh ditugaskan di shift berturutan (harus ada jeda ≥ 1 shift)</li>
+                            <li>Generate hanya menggunakan pegawai yang dicentang</li>
                             <li>Jadwal yang ada pada rentang tanggal ini akan <strong>ditimpa</strong></li>
                             <li>Maksimum rentang: 31 hari</li>
                         </ul>

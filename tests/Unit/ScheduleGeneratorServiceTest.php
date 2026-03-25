@@ -125,3 +125,20 @@ it('does not exceed 24 hours total shift validation', function () {
     expect(fn () => app(ScheduleGeneratorService::class)->generate(Carbon::today(), Carbon::today()))
         ->toThrow(ScheduleConflictException::class);
 });
+
+it('can generate schedules using only selected employees', function () {
+    $aliceId = Employee::where('name', 'Alice')->value('id');
+    $bobId = Employee::where('name', 'Bob')->value('id');
+    $charlieId = Employee::where('name', 'Charlie')->value('id');
+
+    $date = Carbon::parse('2026-04-01');
+    app(ScheduleGeneratorService::class)->generate($date->copy(), $date->copy(), null, [$aliceId, $bobId]);
+
+    expect(Schedule::where('date', 'like', '2026-04-01%')->count())->toBe(3);
+    expect(Schedule::where('employee_id', $charlieId)->count())->toBe(0);
+});
+
+it('throws ScheduleConflictException when employee filter is empty array', function () {
+    expect(fn () => app(ScheduleGeneratorService::class)->generate(Carbon::today(), Carbon::today(), null, []))
+        ->toThrow(ScheduleConflictException::class);
+});

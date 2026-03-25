@@ -1,6 +1,7 @@
 <?php
 
 use App\Exceptions\ScheduleConflictException;
+use App\Models\Employee;
 use App\Models\ScheduleSet;
 use App\Models\Shift;
 use App\Services\ScheduleGeneratorService;
@@ -15,6 +16,9 @@ new class extends Component
 
     public string $date_to = '';
 
+    /** @var int[] */
+    public array $employee_ids = [];
+
     public bool $success = false;
 
     public ?string $errorMsg = null;
@@ -27,6 +31,7 @@ new class extends Component
     {
         $this->date_from = now()->startOfWeek()->toDateString();
         $this->date_to = now()->endOfWeek()->toDateString();
+        $this->employee_ids = Employee::orderBy('name')->pluck('id')->all();
     }
 
     protected function rules(): array
@@ -35,7 +40,19 @@ new class extends Component
             'name' => 'nullable|string|max:120',
             'date_from' => 'required|date',
             'date_to' => 'required|date|after_or_equal:date_from',
+            'employee_ids' => 'required|array|min:1',
+            'employee_ids.*' => 'integer|exists:employees,id',
         ];
+    }
+
+    public function selectAllEmployees(): void
+    {
+        $this->employee_ids = Employee::orderBy('name')->pluck('id')->all();
+    }
+
+    public function clearSelectedEmployees(): void
+    {
+        $this->employee_ids = [];
     }
 
     public function generate(): void
@@ -69,7 +86,7 @@ new class extends Component
                 'date_to' => $to->toDateString(),
                 'status' => 'draft',
             ]);
-            app(ScheduleGeneratorService::class)->generate($from, $to, $set->id);
+            app(ScheduleGeneratorService::class)->generate($from, $to, $set->id, $this->employee_ids);
             $this->generated = $days * $shiftCount;
             $this->success = true;
             $this->created_set_id = $set->id;
@@ -80,6 +97,8 @@ new class extends Component
 
     public function with(): array
     {
-        return [];
+        return [
+            'employees' => Employee::orderBy('name')->get(['id', 'name', 'color']),
+        ];
     }
 };

@@ -286,38 +286,5 @@
             }
         },
     }));
-
-    const showSchedulePreviewToast = (payload) => {
-        if (!window.Toastify) return;
-
-        const message = payload?.message ?? payload;
-        const type = payload?.type ?? 'info';
-        const isSuccess = type === 'success';
-
-        if (!message) return;
-
-        window.Toastify({
-            text: message,
-            duration: 4000,
-            close: true,
-            gravity: 'top',
-            position: 'right',
-            stopOnFocus: true,
-            style: {
-                background: isSuccess ?
-                    'linear-gradient(to right, #16a34a, #22c55e)' :
-                    'linear-gradient(to right, #dc2626, #ef4444)',
-            },
-        }).showToast();
-    };
-
-    if (window.Livewire) {
-        Livewire.on('schedule-preview-toast', showSchedulePreviewToast);
-    } else {
-        document.addEventListener('livewire:init', () => {
-            if (!window.Livewire) return;
-            Livewire.on('schedule-preview-toast', showSchedulePreviewToast);
-        });
-    }
 </script>
 @endscript

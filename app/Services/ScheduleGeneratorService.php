@@ -17,17 +17,28 @@ class ScheduleGeneratorService
     /** @var Collection<int, Employee> */
     private Collection $employees;
 
-    public function generate(Carbon $from, Carbon $to, ?int $scheduleSetId = null): void
+    /** @param  int[]|null  $employeeIds */
+    public function generate(Carbon $from, Carbon $to, ?int $scheduleSetId = null, ?array $employeeIds = null): void
     {
         $this->shifts = Shift::orderBy('sort_order')->get();
-        $this->employees = Employee::all();
+        if (is_array($employeeIds) && $employeeIds === []) {
+            throw new ScheduleConflictException('Pilih minimal 1 pegawai untuk dibuatkan jadwal.');
+        }
+
+        $this->employees = is_array($employeeIds)
+            ? Employee::query()->whereIn('id', $employeeIds)->get()
+            : Employee::all();
 
         if ($this->shifts->isEmpty()) {
             throw new ScheduleConflictException('Belum ada shift yang terdapat di master data. Tambahkan shift terlebih dahulu.');
         }
 
         if ($this->employees->isEmpty()) {
-            throw new ScheduleConflictException('Belum ada pegawai yang terdaftar. Tambahkan pegawai terlebih dahulu.');
+            throw new ScheduleConflictException(
+                is_array($employeeIds)
+                ? 'Tidak ada pegawai yang bisa digunakan untuk generate jadwal.'
+                : 'Belum ada pegawai yang terdaftar. Tambahkan pegawai terlebih dahulu.'
+            );
         }
 
         $this->validateTotalHours();

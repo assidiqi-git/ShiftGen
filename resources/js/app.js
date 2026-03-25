@@ -79,3 +79,49 @@ document.addEventListener('click', (e) => {
     localStorage.setItem(THEME_KEY, next);
     applyTheme(next);
 });
+
+const normalizeToastPayload = (payload) => {
+    if (!payload) return null;
+    if (typeof payload === 'string') return { message: payload, type: 'info' };
+    if (typeof payload === 'object') {
+        const message = payload.message ?? payload.text ?? '';
+        const type = payload.type ?? payload.status ?? (payload.success ? 'success' : 'info');
+        return { message, type };
+    }
+    return null;
+};
+
+const showToast = (payload) => {
+    if (!window.Toastify) return;
+    const p = normalizeToastPayload(payload);
+    if (!p || !p.message) return;
+    const isSuccess = p.type === 'success' || p.type === 'ok' || p.type === 'info';
+    window.Toastify({
+        text: p.message,
+        duration: 4000,
+        close: true,
+        gravity: 'top',
+        position: 'right',
+        stopOnFocus: true,
+        style: {
+            background: isSuccess
+                ? 'linear-gradient(to right, #16a34a, #22c55e)'
+                : 'linear-gradient(to right, #dc2626, #ef4444)',
+        },
+    }).showToast();
+};
+
+document.addEventListener('alpine:init', () => {
+    if (!window.Alpine) return;
+    const store = window.Alpine.store('toast');
+    if (store) {
+        store.show = showToast;
+    } else {
+        window.Alpine.store('toast', { show: showToast });
+    }
+});
+
+window.addEventListener('toast-show', (e) => {
+    const detail = e?.detail ?? e;
+    showToast(detail);
+});

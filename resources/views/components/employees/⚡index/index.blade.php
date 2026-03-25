@@ -13,9 +13,6 @@
         </button>
     </div>
 
-    @if (session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
-    @endif
     {{-- Form Modal --}}
     @if ($showForm)
         <div class="modal-backdrop" id="employee-form-modal">

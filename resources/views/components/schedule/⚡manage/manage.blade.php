@@ -13,10 +13,6 @@
         </button>
     </div>
 
-    @if (session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
-    @endif
-
     @if ($deletingId)
         <div class="modal-backdrop">
             <div class="modal-card modal-card-sm">
@@ -88,8 +84,8 @@
                             <td class="text-muted">{{ $set->created_at?->diffForHumans() }}</td>
                             <td>
                                 <div class="action-group">
-                                    <a href="{{ route('schedule.preview', ['scheduleSet' => $set]) }}"
-                                        wire:navigate class="btn btn-secondary btn-sm">Preview</a>
+                                    <a href="{{ route('schedule.preview', ['scheduleSet' => $set]) }}" wire:navigate
+                                        class="btn btn-secondary btn-sm">Preview</a>
                                     <button wire:click="confirmDelete({{ $set->id }})"
                                         class="btn btn-danger btn-sm">Hapus</button>
                                 </div>

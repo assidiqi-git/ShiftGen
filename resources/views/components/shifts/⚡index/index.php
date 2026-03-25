@@ -4,8 +4,7 @@ use App\Models\Shift;
 use Carbon\Carbon;
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public string $name = '';
 
     public string $start_time = '';
@@ -91,10 +90,10 @@ new class extends Component
 
         if ($this->editingId) {
             Shift::findOrFail($this->editingId)->update($data);
-            session()->flash('success', 'Shift berhasil diperbarui.');
+            $this->dispatch('toast-show', message: 'Shift berhasil diperbarui.', type: 'success');
         } else {
             Shift::create($data);
-            session()->flash('success', 'Shift berhasil ditambahkan.');
+            $this->dispatch('toast-show', message: 'Shift berhasil ditambahkan.', type: 'success');
         }
 
         $this->reset(['name', 'start_time', 'end_time', 'duration_hours', 'sort_order', 'editingId', 'showForm']);
@@ -124,7 +123,7 @@ new class extends Component
     {
         if ($this->deletingId) {
             Shift::findOrFail($this->deletingId)->delete();
-            session()->flash('success', 'Shift berhasil dihapus.');
+            $this->dispatch('toast-show', message: 'Shift berhasil dihapus.', type: 'success');
         }
         $this->deletingId = null;
     }

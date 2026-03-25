@@ -89,7 +89,7 @@ new class extends Component {
 
     private function toast(string $message, bool $success = true): void
     {
-        $this->dispatch('schedule-preview-toast', message: $message, type: $success ? 'success' : 'error');
+        $this->dispatch('toast-show', message: $message, type: $success ? 'success' : 'error');
     }
 
     /**
