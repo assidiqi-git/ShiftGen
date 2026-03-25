@@ -26,6 +26,68 @@ new class extends Component
         $this->date_to = $scheduleSet->date_to->toDateString();
     }
 
+    public function replaceScheduleEmployee(int $scheduleId, int $employeeId): void
+    {
+        $schedule = Schedule::with('shift')->find($scheduleId);
+        $employee = Employee::find($employeeId);
+
+        if (! $schedule || ! $employee) {
+            $this->toast('Gagal mengganti pegawai: data tidak ditemukan.', false);
+
+            return;
+        }
+
+        $date = $schedule->date->toDateString();
+        $oldEmployeeId = $schedule->employee_id;
+        $newShiftSortOrder = Shift::whereKey($schedule->shift_id)->value('sort_order');
+
+        if ($newShiftSortOrder === null) {
+            $this->toast('Tidak bisa mengganti: shift tidak ditemukan.', false);
+
+            return;
+        }
+
+        $hasAdjacentShift = Schedule::query()
+            ->join('shifts', 'shifts.id', '=', 'schedules.shift_id')
+            ->where('schedules.employee_id', $employeeId)
+            ->whereDate('schedules.date', $date)
+            ->when(
+                $this->schedule_set_id !== null,
+                fn ($q) => $q->where('schedules.schedule_set_id', $this->schedule_set_id)
+            )
+            ->where('schedules.id', '!=', $scheduleId)
+            ->whereIn('shifts.sort_order', [$newShiftSortOrder - 1, $newShiftSortOrder + 1])
+            ->exists();
+
+        if ($hasAdjacentShift) {
+            $this->toast('Tidak bisa mengganti: melanggar aturan jeda ≥ 1 shift. Pegawai ini sudah ada di shift yang bersebelahan pada tanggal tersebut.', false);
+
+            return;
+        }
+
+        $schedule->update(['employee_id' => $employeeId]);
+
+        $pairs = [
+            [$oldEmployeeId, $date],
+            [$employeeId, $date],
+        ];
+
+        $seen = [];
+        foreach ($pairs as [$empId, $d]) {
+            if ($empId === null) {
+                continue;
+            }
+            $key = "{$empId}|{$d}";
+            if (isset($seen[$key])) {
+                continue;
+            }
+            $seen[$key] = true;
+            $this->recalculateOvertimeForEmployeeOnDate($empId, $d);
+        }
+
+        $this->toast('Pegawai pada jadwal berhasil diganti.', true);
+    }
+
     private function toast(string $message, bool $success = true): void
     {
         $this->dispatch('schedule-preview-toast', message: $message, type: $success ? 'success' : 'error');
@@ -317,6 +379,8 @@ new class extends Component
 
         $hasDrafts = $schedulesRaw->where('status', 'draft')->isNotEmpty();
 
-        return compact('shifts', 'dates', 'grid', 'hasDrafts', 'employeeSummaries');
+        $employees = $employees->all();
+
+        return compact('shifts', 'dates', 'grid', 'hasDrafts', 'employeeSummaries', 'employees');
     }
 };

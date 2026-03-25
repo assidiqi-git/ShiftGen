@@ -95,7 +95,10 @@
                                         <div class="employee-card {{ $schedule->status === 'published' ? 'published' : 'draft' }} {{ $schedule->is_overtime ? 'overtime' : '' }}"
                                             wire:key="schedule-{{ $schedule->id }}" draggable="true"
                                             x-on:dragstart="startDrag($event, {{ $schedule->id }}, '{{ $dateKey }}')"
-                                            x-on:dragend="endDrag($event)" id="schedule-card-{{ $schedule->id }}"
+                                            x-on:dragend="endDrag($event)" x-on:dragover.prevent="highlightDrop($event)"
+                                            x-on:dragleave="unhighlightDrop($event)"
+                                            x-on:drop.stop="handleDrop($event, {{ $shift->id }}, '{{ $dateKey }}', {{ $schedule->id }})"
+                                            id="schedule-card-{{ $schedule->id }}"
                                             style="background: {{ $bg }}; border-color: {{ $border }}; border-left: 4px solid {{ $employeeColor }}; color: var(--text-primary);">
                                             <span class="employee-name">{{ $schedule->employee?->name ?? '—' }}</span>
                                             @if ($schedule->is_overtime)
@@ -112,6 +115,37 @@
                             @endforeach
                         </tr>
                     @endforeach
+
+                    <tr class="employee-pool-row">
+                        <th class="shift-header-cell">Pegawai</th>
+                        <td colspan="{{ count($dates) + 2 }}" class="employee-name-cell" style="padding: 10px 12px;">
+                            <div class="employee-pool" style="display: flex; flex-wrap: wrap; gap: 30px;">
+                                @foreach ($employees as $employee)
+                                    @php
+                                        $employeeColor = $employee->color ?? '#00ADB5';
+                                        $hex = ltrim($employeeColor, '#');
+                                        if (strlen($hex) !== 6) {
+                                            $hex = '00ADB5';
+                                            $employeeColor = '#00ADB5';
+                                        }
+                                        $r = hexdec(substr($hex, 0, 2));
+                                        $g = hexdec(substr($hex, 2, 2));
+                                        $b = hexdec(substr($hex, 4, 2));
+                                        $bg = "rgba({$r}, {$g}, {$b}, 0.12)";
+                                        $border = "rgba({$r}, {$g}, {$b}, 0.28)";
+                                    @endphp
+                                    <div class="employee-card" wire:key="employee-pool-{{ $employee->id }}" draggable="true"
+                                        x-on:dragstart="startDragEmployee($event, {{ $employee->id }})"
+                                        x-on:dragend="endDrag($event)"
+                                        style="background: {{ $bg }}; border-color: {{ $border }}; border-left: 4px solid {{ $employeeColor }}; color: var(--text-primary); min-width: 140px; max-width: 220px; display: inline-flex; align-items: center; justify-content: space-between; padding: 6px 10px;">
+                                        <span class="employee-name"
+                                            style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ $employee->name }}</span>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </td>
+                    </tr>
+
                     @if ($shifts->isEmpty())
                         <tr>
                             <td colspan="32" class="empty-state">
@@ -181,12 +215,19 @@
     Alpine.data('schedulePreview', () => ({
         draggingId: null,
         sourceDate: null,
+        draggingEmployeeId: null,
 
         startDrag(event, scheduleId, date) {
             this.draggingId = scheduleId;
             this.sourceDate = date;
             event.target.classList.add('dragging');
             event.dataTransfer.effectAllowed = 'move';
+        },
+
+        startDragEmployee(event, employeeId) {
+            this.draggingEmployeeId = employeeId;
+            event.target.classList.add('dragging');
+            event.dataTransfer.effectAllowed = 'copy';
         },
 
         endDrag(event) {
@@ -203,7 +244,20 @@
 
         handleDrop(event, shiftId, date, targetScheduleId = null) {
             event.currentTarget?.classList?.remove('drop-target');
-            if (!this.draggingId || !shiftId || !date) return;
+            if (!shiftId || !date) return;
+
+            if (this.draggingEmployeeId) {
+                const empId = this.draggingEmployeeId;
+                this.draggingEmployeeId = null;
+                this.draggingId = null;
+                this.sourceDate = null;
+                if (targetScheduleId) {
+                    this.$wire.replaceScheduleEmployee(targetScheduleId, empId);
+                }
+                return;
+            }
+
+            if (!this.draggingId) return;
 
             const draggedId = this.draggingId;
 
