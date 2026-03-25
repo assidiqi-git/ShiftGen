@@ -124,7 +124,7 @@
                     <tr class="employee-pool-row">
                         <th class="shift-header-cell">Pegawai</th>
                         <td colspan="{{ count($dates) }}" class="employee-name-cell" style="padding: 10px 12px;">
-                            <div class="employee-pool" style="display: flex; flex-wrap: wrap; gap: 30px;">
+                            <div class="flex justify-between" >
                                 @foreach ($employees as $employee)
                                     @php
                                         $employeeColor = $employee->color ?? '#00ADB5';
@@ -284,19 +284,12 @@
                     alert('Tabel jadwal tidak ditemukan.');
                     return;
                 }
-                const width = table?.scrollWidth ?? table?.offsetWidth ?? 0;
-                const height = table?.scrollHeight ?? table?.offsetHeight ?? 0;
 
                 const waitFonts = document.fonts?.ready ?? Promise.resolve();
                 waitFonts.then(() => {
                     html2canvas(table, {
                         scale: 2,
                         useCORS: true,
-                        backgroundColor: '#ffffff',
-                        width: width || undefined,
-                        height: height || undefined,
-                        windowWidth: width || undefined,
-                        windowHeight: height || undefined,
                         onclone: (doc) => {
                             const wrap = doc.getElementById('schedule-grid');
                             if (wrap) {
@@ -315,10 +308,13 @@
                                 el.style.textOverflow = 'clip';
                                 el.style.wordBreak = 'break-word';
                                 el.style.overflowWrap = 'anywhere';
+                                el.style.marginBottom = '8px';
+                                el.style.marginTop = '0px';
+
                             });
 
                             doc.querySelectorAll('.employee-card').forEach((el) => {
-                                el.style.alignItems = 'flex-start';
+                                el.style.alignItems = 'center';
                             });
                         },
                     }).then((canvas) => {
