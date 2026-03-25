@@ -57,16 +57,20 @@ new class extends Component
             return;
         }
 
-        $hasAdjacentOrSameShift = Schedule::query()
+        $hasAdjacentShift = Schedule::query()
             ->join('shifts', 'shifts.id', '=', 'schedules.shift_id')
             ->where('schedules.employee_id', $employeeId)
             ->whereDate('schedules.date', $newDate)
+            ->when(
+                $this->schedule_set_id !== null,
+                fn ($q) => $q->where('schedules.schedule_set_id', $this->schedule_set_id)
+            )
             ->where('schedules.id', '!=', $scheduleId)
-            ->whereBetween('shifts.sort_order', [$newShiftSortOrder - 1, $newShiftSortOrder + 1])
+            ->whereIn('shifts.sort_order', [$newShiftSortOrder - 1, $newShiftSortOrder + 1])
             ->exists();
 
-        if ($hasAdjacentOrSameShift) {
-            $this->toast('Tidak bisa memindahkan: melanggar aturan jeda ≥ 1 shift. Pegawai ini sudah ada di shift yang sama/bersebelahan.', false);
+        if ($hasAdjacentShift) {
+            $this->toast('Tidak bisa memindahkan: melanggar aturan jeda ≥ 1 shift. Pegawai ini sudah ada di shift yang bersebelahan.', false);
 
             return;
         }
@@ -116,7 +120,7 @@ new class extends Component
             return;
         }
 
-        $hasAdjacentOrSameShift = function (int $employeeId, string $date, int $newShiftSortOrder, array $excludeScheduleIds): bool {
+        $hasAdjacentShift = function (int $employeeId, string $date, int $newShiftSortOrder, array $excludeScheduleIds): bool {
             $excludeScheduleIds = array_values(array_unique($excludeScheduleIds));
 
             return Schedule::query()
@@ -124,17 +128,21 @@ new class extends Component
                 ->where('schedules.employee_id', $employeeId)
                 ->whereDate('schedules.date', $date)
                 ->when(
+                    $this->schedule_set_id !== null,
+                    fn ($q) => $q->where('schedules.schedule_set_id', $this->schedule_set_id)
+                )
+                ->when(
                     count($excludeScheduleIds) > 0,
                     fn ($q) => $q->whereNotIn('schedules.id', $excludeScheduleIds)
                 )
-                ->whereBetween('shifts.sort_order', [$newShiftSortOrder - 1, $newShiftSortOrder + 1])
+                ->whereIn('shifts.sort_order', [$newShiftSortOrder - 1, $newShiftSortOrder + 1])
                 ->exists();
         };
 
         $sameEmployeeSameDate = $draggedSchedule->employee_id === $targetSchedule->employee_id
             && $draggedNewDate === $targetNewDate;
 
-        if ($sameEmployeeSameDate && abs($draggedNewShiftSortOrder - $targetNewShiftSortOrder) <= 1) {
+        if ($sameEmployeeSameDate && abs($draggedNewShiftSortOrder - $targetNewShiftSortOrder) === 1) {
             $this->toast("Tidak bisa menukar: melanggar aturan jeda ≥ 1 shift untuk pegawai {$draggedSchedule->employee->name}.", false);
 
             return;
@@ -145,13 +153,17 @@ new class extends Component
                 ->join('shifts', 'shifts.id', '=', 'schedules.shift_id')
                 ->where('schedules.employee_id', $draggedSchedule->employee_id)
                 ->whereDate('schedules.date', $draggedNewDate)
+                ->when(
+                    $this->schedule_set_id !== null,
+                    fn ($q) => $q->where('schedules.schedule_set_id', $this->schedule_set_id)
+                )
                 ->whereNotIn('schedules.id', [$draggedId, $targetId])
                 ->pluck('shifts.sort_order');
 
             $hasConflict = $existingSortOrders->contains(
-                fn ($sortOrder) => $sortOrder >= $draggedNewShiftSortOrder - 1 && $sortOrder <= $draggedNewShiftSortOrder + 1
+                fn ($sortOrder) => abs($sortOrder - $draggedNewShiftSortOrder) === 1
             ) || $existingSortOrders->contains(
-                fn ($sortOrder) => $sortOrder >= $targetNewShiftSortOrder - 1 && $sortOrder <= $targetNewShiftSortOrder + 1
+                fn ($sortOrder) => abs($sortOrder - $targetNewShiftSortOrder) === 1
             );
 
             if ($hasConflict) {
@@ -165,7 +177,7 @@ new class extends Component
                 $excludeForDragged[] = $targetId;
             }
 
-            if ($hasAdjacentOrSameShift($draggedSchedule->employee_id, $draggedNewDate, $draggedNewShiftSortOrder, $excludeForDragged)) {
+            if ($hasAdjacentShift($draggedSchedule->employee_id, $draggedNewDate, $draggedNewShiftSortOrder, $excludeForDragged)) {
                 $this->toast("Tidak bisa menukar: melanggar aturan jeda ≥ 1 shift untuk pegawai {$draggedSchedule->employee->name}.", false);
 
                 return;
@@ -176,7 +188,7 @@ new class extends Component
                 $excludeForTarget[] = $draggedId;
             }
 
-            if ($hasAdjacentOrSameShift($targetSchedule->employee_id, $targetNewDate, $targetNewShiftSortOrder, $excludeForTarget)) {
+            if ($hasAdjacentShift($targetSchedule->employee_id, $targetNewDate, $targetNewShiftSortOrder, $excludeForTarget)) {
                 $this->toast("Tidak bisa menukar: melanggar aturan jeda ≥ 1 shift untuk pegawai {$targetSchedule->employee->name}.", false);
 
                 return;
@@ -223,6 +235,10 @@ new class extends Component
             ->join('shifts', 'shifts.id', '=', 'schedules.shift_id')
             ->where('schedules.employee_id', $employeeId)
             ->whereDate('schedules.date', $date)
+            ->when(
+                $this->schedule_set_id !== null,
+                fn ($q) => $q->where('schedules.schedule_set_id', $this->schedule_set_id)
+            )
             ->orderBy('shifts.sort_order')
             ->orderBy('schedules.id')
             ->pluck('schedules.id');
