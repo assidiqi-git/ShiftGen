@@ -16,24 +16,14 @@ new class extends Component
 
     public ?int $schedule_set_id = null;
 
-    public function mount(): void
+    public function mount(ScheduleSet $scheduleSet): void
     {
         $this->date_from = now()->startOfWeek()->subDay()->toDateString();
         $this->date_to = now()->endOfWeek()->addDay()->toDateString();
 
-        $setId = request()->query('set');
-        if (! $setId) {
-            abort(404);
-        }
-
-        $set = ScheduleSet::find($setId);
-        if (! $set) {
-            abort(404);
-        }
-
-        $this->schedule_set_id = $set->id;
-        $this->date_from = $set->date_from->toDateString();
-        $this->date_to = $set->date_to->toDateString();
+        $this->schedule_set_id = $scheduleSet->id;
+        $this->date_from = $scheduleSet->date_from->toDateString();
+        $this->date_to = $scheduleSet->date_to->toDateString();
     }
 
     private function toast(string $message, bool $success = true): void

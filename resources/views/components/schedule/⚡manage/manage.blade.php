@@ -88,7 +88,7 @@
                             <td class="text-muted">{{ $set->created_at?->diffForHumans() }}</td>
                             <td>
                                 <div class="action-group">
-                                    <a href="{{ \Illuminate\Support\Facades\URL::temporarySignedRoute('schedule.preview', now()->addMinutes(15), ['set' => $set->id]) }}"
+                                    <a href="{{ route('schedule.preview', ['scheduleSet' => $set]) }}"
                                         wire:navigate class="btn btn-secondary btn-sm">Preview</a>
                                     <button wire:click="confirmDelete({{ $set->id }})"
                                         class="btn btn-danger btn-sm">Hapus</button>
