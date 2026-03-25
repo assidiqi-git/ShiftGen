@@ -662,7 +662,7 @@ body.sidebar-open .sidebar-backdrop {
 }
 
 .form-row {
-    display: grid;
+    display: flex;
     flex-direction: column;
     gap: 12px;
 }
@@ -1097,7 +1097,7 @@ body.sidebar-open .sidebar-backdrop {
 }
 
 .employee-card.overtime {
-    outline: 1px solid var(--warning);
+    outline: 2px solid var(--warning);
 }
 
 .employee-card.dragging {
@@ -1118,8 +1118,8 @@ body.sidebar-open .sidebar-backdrop {
 }
 
 .overtime-badge {
-    background: var(--warning-bg);
-    color: var(--warning);
+    background: var(--danger-bg);
+    color: var(--danger);
     border-radius: 3px;
     padding: 1px 4px;
     font-size: 0.6rem;

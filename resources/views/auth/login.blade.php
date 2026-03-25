@@ -15,7 +15,7 @@
 
             <form method="POST" action="{{ route('login') }}">
                 @csrf
-                <div class="form-row">
+                <div class="grid">
                     <div class="form-group">
                         <label class="form-label" for="email">Email</label>
                         <input id="email" type="email" name="email" value="{{ old('email') }}" required autofocus class="form-input {{ $errors->has('email') ? 'input-error' : '' }}" autocomplete="username" />

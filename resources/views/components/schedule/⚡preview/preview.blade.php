@@ -34,11 +34,13 @@
         <div class="form-row">
             <div class="form-group-inline">
                 <label class="form-label" for="preview-from">Dari</label>
-                <input id="preview-from" type="date" wire:model.live="date_from" class="form-input form-input-sm" />
+                <input id="preview-from" type="date" wire:model.live="date_from" class="form-input form-input-sm"
+                    @if($date_from) min="{{ $date_from }}" @endif @if($date_to) max="{{ $date_to }}" @endif />
             </div>
             <div class="form-group-inline">
                 <label class="form-label" for="preview-to">Sampai</label>
-                <input id="preview-to" type="date" wire:model.live="date_to" class="form-input form-input-sm" />
+                <input id="preview-to" type="date" wire:model.live="date_to" class="form-input form-input-sm"
+                    @if($date_from) min="{{ $date_from }}" @endif @if($date_to) max="{{ $date_to }}" @endif />
             </div>
         </div>
     </div>
@@ -274,12 +276,56 @@
 
         exportPng() {
             if (typeof html2canvas !== 'undefined') {
-                const el = document.getElementById('schedule-grid-table');
-                html2canvas(el, { scale: 2, useCORS: true }).then(canvas => {
-                    const link = document.createElement('a');
-                    link.download = 'jadwal-shift.png';
-                    link.href = canvas.toDataURL('image/png');
-                    link.click();
+                const table = document.getElementById('schedule-grid-table');
+                if (!table) {
+                    alert('Tabel jadwal tidak ditemukan.');
+                    return;
+                }
+                const width = table?.scrollWidth ?? table?.offsetWidth ?? 0;
+                const height = table?.scrollHeight ?? table?.offsetHeight ?? 0;
+
+                const waitFonts = document.fonts?.ready ?? Promise.resolve();
+                waitFonts.then(() => {
+                    html2canvas(table, {
+                        scale: 2,
+                        useCORS: true,
+                        backgroundColor: '#ffffff',
+                        width: width || undefined,
+                        height: height || undefined,
+                        windowWidth: width || undefined,
+                        windowHeight: height || undefined,
+                        onclone: (doc) => {
+                            const wrap = doc.getElementById('schedule-grid');
+                            if (wrap) {
+                                wrap.style.overflow = 'visible';
+                                wrap.style.maxWidth = 'none';
+                            }
+
+                            doc.querySelectorAll('.shift-header-cell, .shift-label-cell').forEach((el) => {
+                                el.style.position = 'static';
+                                el.style.left = 'auto';
+                            });
+
+                            doc.querySelectorAll('.employee-name').forEach((el) => {
+                                el.style.whiteSpace = 'normal';
+                                el.style.overflow = 'visible';
+                                el.style.textOverflow = 'clip';
+                                el.style.wordBreak = 'break-word';
+                                el.style.overflowWrap = 'anywhere';
+                            });
+
+                            doc.querySelectorAll('.employee-card').forEach((el) => {
+                                el.style.alignItems = 'flex-start';
+                            });
+                        },
+                    }).then((canvas) => {
+                        const link = document.createElement('a');
+                        link.download = 'jadwal-shift ' + Date.now() + '.png';
+                        link.href = canvas.toDataURL('image/png');
+                        link.click();
+                    }).catch(() => {
+                        alert('Gagal export PNG. Coba refresh halaman lalu ulangi.');
+                    });
                 });
             } else {
                 alert('Library html2canvas belum dimuat. Pastikan npm run build sudah dijalankan.');
