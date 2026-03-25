@@ -54,7 +54,7 @@
             <table class="schedule-table" id="schedule-grid-table">
                 <thead>
                     <tr>
-                        <th class="shift-header-cell">Shift</th>
+                        <th class="shift-header-cell text-sm!">Shift</th>
                         @foreach ($dates as $date)
                             <th class="date-header-cell">
                                 <span class="date-day">{{ $date->translatedFormat('D') }}</span>
@@ -122,9 +122,9 @@
                     @endforeach
 
                     <tr class="employee-pool-row">
-                        <th class="shift-header-cell">Pegawai</th>
-                        <td colspan="{{ count($dates) }}" class="employee-name-cell" style="padding: 10px 12px;">
-                            <div class="flex justify-between" >
+                        <th class="shift-header-cell text-sm!">Pegawai</th>
+                        <td colspan="{{ count($dates) }}" class="schedule-cell" style="padding: 10px 12px;">
+                            <div class="flex justify-between">
                                 @foreach ($employees as $employee)
                                     @php
                                         $employeeColor = $employee->color ?? '#00ADB5';
