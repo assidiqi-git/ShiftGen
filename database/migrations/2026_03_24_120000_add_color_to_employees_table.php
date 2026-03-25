@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('employees', function (Blueprint $table) {
-            $table->string('color', 7)->default('#60a5fa')->after('name');
+            $table->string('color', 7)->default('#00ADB5')->after('name');
         });
     }
 

@@ -97,8 +97,8 @@
                             <td class="font-medium">{{ $employee->name }}</td>
                             <td>
                                 <span class="badge"
-                                    style="background: {{ $employee->color ?? '#60a5fa' }}; color: #0f172a;">
-                                    {{ $employee->color ?? '#60a5fa' }}
+                                    style="background: {{ $employee->color ?? '#00ADB5' }}; color: #0f172a;">
+                                    {{ $employee->color ?? '#00ADB5' }}
                                 </span>
                             </td>
                             <td>

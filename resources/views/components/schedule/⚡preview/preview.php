@@ -290,7 +290,7 @@ new class extends Component
             ->map(fn ($employee) => [
                 'id' => $employee->id,
                 'name' => $employee->name,
-                'color' => $employee->color ?? '#60a5fa',
+                'color' => $employee->color ?? '#00ADB5',
                 'shift_count' => (int) ($hoursAndCountByEmployee->get($employee->id)['shift_count'] ?? 0),
                 'normal_count' => (int) ($hoursAndCountByEmployee->get($employee->id)['normal_count'] ?? 0),
                 'overtime_count' => (int) ($hoursAndCountByEmployee->get($employee->id)['overtime_count'] ?? 0),

@@ -79,11 +79,11 @@
                                     data-shift="{{ $shift->id }}" data-date="{{ $dateKey }}">
                                     @foreach ($grid[$shift->id][$dateKey] as $schedule)
                                         @php
-                                            $employeeColor = $schedule->employee?->color ?? '#60a5fa';
+                                            $employeeColor = $schedule->employee?->color ?? '#00ADB5';
                                             $hex = ltrim($employeeColor, '#');
                                             if (strlen($hex) !== 6) {
-                                                $hex = '60a5fa';
-                                                $employeeColor = '#60a5fa';
+                                                $hex = '00ADB5';
+                                                $employeeColor = '#00ADB5';
                                             }
                                             $r = hexdec(substr($hex, 0, 2));
                                             $g = hexdec(substr($hex, 2, 2));
@@ -145,7 +145,7 @@
                             <tr wire:key="employee-summary-{{ $summary['id'] }}">
                                 <td class="font-medium">
                                     <span class="badge"
-                                        style="background: {{ $summary['color'] ?? '#60a5fa' }}; color: transparent; padding: 0; width: 10px; height: 10px;"></span>
+                                        style="background: {{ $summary['color'] ?? '#00ADB5' }}; color: transparent; padding: 0; width: 10px; height: 10px;"></span>
                                     {{ $summary['name'] ?? '—' }}
                                 </td>
                                 <td>

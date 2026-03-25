@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return to_route('employees.index');
+    return to_route('schedule.manage');
 });
 
 Route::livewire('/employees', 'employees.index')->name('employees.index');

@@ -10,7 +10,7 @@ new class extends Component
 
     public string $name = '';
 
-    public string $color = '#60a5fa';
+    public string $color = '#00ADB5';
 
     public ?int $editingId = null;
 
@@ -29,7 +29,7 @@ new class extends Component
     public function openCreate(): void
     {
         $this->reset(['name', 'color', 'editingId']);
-        $this->color = '#60a5fa';
+        $this->color = '#00ADB5';
         $this->showForm = true;
     }
 
@@ -38,7 +38,7 @@ new class extends Component
         $employee = Employee::findOrFail($id);
         $this->editingId = $id;
         $this->name = $employee->name;
-        $this->color = $employee->color ?? '#60a5fa';
+        $this->color = $employee->color ?? '#00ADB5';
         $this->showForm = true;
     }
 
