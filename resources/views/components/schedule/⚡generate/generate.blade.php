@@ -13,7 +13,7 @@
                     d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
             </svg>
             Berhasil membuat <strong>{{ $generated }} slot jadwal</strong> (draft).
-            <a href="{{ route('schedule.manage') }}" wire:navigate class="alert-link">Buka Manajemen →</a>
+            <a href="{{ route('schedule.preview', ['scheduleSet' => $created_set_id]) }}" wire:navigate class="alert-link">Lihat Preview →</a>
         </div>
     @endif
 

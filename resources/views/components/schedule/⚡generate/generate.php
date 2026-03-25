@@ -7,8 +7,7 @@ use App\Services\ScheduleGeneratorService;
 use Carbon\Carbon;
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public string $name = '';
 
     public string $date_from = '';
@@ -20,6 +19,8 @@ new class extends Component
     public ?string $errorMsg = null;
 
     public int $generated = 0;
+
+    public ?int $created_set_id = null;
 
     public function mount(): void
     {
@@ -58,7 +59,7 @@ new class extends Component
 
             $name = trim($this->name);
             if ($name === '') {
-                $name = 'Jadwal '.$from->toDateString().' – '.$to->toDateString();
+                $name = 'Jadwal ' . $from->toDateString() . ' – ' . $to->toDateString();
             }
 
             $set = ScheduleSet::create([
@@ -70,6 +71,7 @@ new class extends Component
             app(ScheduleGeneratorService::class)->generate($from, $to, $set->id);
             $this->generated = $days * $shiftCount;
             $this->success = true;
+            $this->created_set_id = $set->id;
         } catch (ScheduleConflictException $e) {
             $this->errorMsg = $e->getMessage();
         }
