@@ -5,19 +5,22 @@
             <p class="page-subtitle">Lihat, ubah, dan publish jadwal shift pegawai</p>
         </div>
         <div class="header-actions">
-            @if ($hasDrafts)
-                <button wire:click="publishAll" class="btn btn-success" id="btn-publish">
-                    <span wire:loading.remove wire:target="publishAll" class="flex items-center justify-between gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
-                            stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                        </svg>
-                        Publish Semua
-                    </span>
-                    <span wire:loading wire:target="publishAll">Publishing...</span>
-                </button>
-            @endif
+            {{-- @if ($hasDrafts)--}}
+            {{-- <button wire:click="publishAll" class="btn btn-success" id="btn-publish">--}}
+                {{-- <span wire:loading.remove wire:target="publishAll"
+                    class="flex items-center justify-between gap-2">--}}
+                    {{-- <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" --}}
+                        {{-- stroke="currentColor">--}}
+                        {{--
+                        <path stroke-linecap="round" stroke-linejoin="round" --}} {{--
+                            d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />--}}
+                        {{--
+                    </svg>--}}
+                    {{-- Publish Semua--}}
+                    {{-- </span>--}}
+                {{-- <span wire:loading wire:target="publishAll">Publishing...</span>--}}
+                {{-- </button>--}}
+            {{-- @endif--}}
             <button id="btn-export-png" class="btn btn-secondary" x-on:click="exportPng()">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
                     stroke="currentColor">
@@ -101,16 +104,16 @@
                                             x-on:dragleave="unhighlightDrop($event)"
                                             x-on:drop.stop="handleDrop($event, {{ $shift->id }}, '{{ $dateKey }}', {{ $schedule->id }})"
                                             id="schedule-card-{{ $schedule->id }}"
-                                            style="background: {{ $bg }}; border-color: {{ $border }}; border-left: 4px solid {{ $employeeColor }}; color: var(--text-primary);">
+                                            style="background: {{ $bg }}; border-color: {{ $border }}; border-left: 6px solid {{ $employeeColor }}; color: var(--text-primary);">
                                             <span class="employee-name">{{ $schedule->employee?->name ?? '—' }}</span>
                                             @if ($schedule->is_overtime)
                                                 <span class="overtime-badge">OT</span>
                                             @endif
-                                            @if ($schedule->status === 'published')
-                                                <span class="status-dot published-dot" title="Published"></span>
-                                            @else
-                                                <span class="status-dot draft-dot" title="Draft"></span>
-                                            @endif
+                                            {{-- @if ($schedule->status === 'published')--}}
+                                            {{-- <span class="status-dot published-dot" title="Published"></span>--}}
+                                            {{-- @else--}}
+                                            {{-- <span class="status-dot draft-dot" title="Draft"></span>--}}
+                                            {{-- @endif--}}
                                         </div>
                                     @endforeach
                                 </td>
@@ -139,7 +142,7 @@
                                     <div class="employee-card" wire:key="employee-pool-{{ $employee->id }}" draggable="true"
                                         x-on:dragstart="startDragEmployee($event, {{ $employee->id }})"
                                         x-on:dragend="endDrag($event)"
-                                        style="background: {{ $bg }}; border-color: {{ $border }}; border-left: 4px solid {{ $employeeColor }}; color: var(--text-primary); min-width: 140px; max-width: 220px; display: inline-flex; align-items: center; justify-content: space-between; padding: 6px 10px;">
+                                        style="background: {{ $bg }}; border-color: {{ $border }}; border-left: 6px solid {{ $employeeColor }}; color: var(--text-primary); min-width: 140px; max-width: 220px; display: inline-flex; align-items: center; justify-content: space-between; padding: 6px 10px;">
                                         <span class="employee-name"
                                             style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ $employee->name }}</span>
                                     </div>
