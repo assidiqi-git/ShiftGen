@@ -4,7 +4,8 @@ use App\Models\Shift;
 use Carbon\Carbon;
 use Livewire\Component;
 
-new class extends Component {
+new class extends Component
+{
     public string $name = '';
 
     public string $start_time = '';

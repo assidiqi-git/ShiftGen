@@ -8,7 +8,8 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 
-new class extends Component {
+new class extends Component
+{
     public string $date_from = '';
 
     public string $date_to = '';
@@ -30,7 +31,7 @@ new class extends Component {
         $schedule = Schedule::with('shift')->find($scheduleId);
         $employee = Employee::find($employeeId);
 
-        if (!$schedule || !$employee) {
+        if (! $schedule || ! $employee) {
             $this->toast('Gagal mengganti pegawai: data tidak ditemukan.', false);
 
             return;
@@ -52,7 +53,7 @@ new class extends Component {
             ->whereDate('schedules.date', $date)
             ->when(
                 $this->schedule_set_id !== null,
-                fn($q) => $q->where('schedules.schedule_set_id', $this->schedule_set_id)
+                fn ($q) => $q->where('schedules.schedule_set_id', $this->schedule_set_id)
             )
             ->where('schedules.id', '!=', $scheduleId)
             ->whereIn('shifts.sort_order', [$newShiftSortOrder - 1, $newShiftSortOrder + 1])
@@ -114,7 +115,7 @@ new class extends Component {
             ->whereDate('schedules.date', $newDate)
             ->when(
                 $this->schedule_set_id !== null,
-                fn($q) => $q->where('schedules.schedule_set_id', $this->schedule_set_id)
+                fn ($q) => $q->where('schedules.schedule_set_id', $this->schedule_set_id)
             )
             ->where('schedules.id', '!=', $scheduleId)
             ->whereIn('shifts.sort_order', [$newShiftSortOrder - 1, $newShiftSortOrder + 1])
@@ -148,7 +149,7 @@ new class extends Component {
         $draggedSchedule = Schedule::with('employee')->find($draggedId);
         $targetSchedule = Schedule::with('employee')->find($targetId);
 
-        if (!$draggedSchedule || !$targetSchedule) {
+        if (! $draggedSchedule || ! $targetSchedule) {
             $this->toast('Gagal menukar: Data jadwal tidak ditemukan.', false);
 
             return;
@@ -180,11 +181,11 @@ new class extends Component {
                 ->whereDate('schedules.date', $date)
                 ->when(
                     $this->schedule_set_id !== null,
-                    fn($q) => $q->where('schedules.schedule_set_id', $this->schedule_set_id)
+                    fn ($q) => $q->where('schedules.schedule_set_id', $this->schedule_set_id)
                 )
                 ->when(
                     count($excludeScheduleIds) > 0,
-                    fn($q) => $q->whereNotIn('schedules.id', $excludeScheduleIds)
+                    fn ($q) => $q->whereNotIn('schedules.id', $excludeScheduleIds)
                 )
                 ->whereIn('shifts.sort_order', [$newShiftSortOrder - 1, $newShiftSortOrder + 1])
                 ->exists();
@@ -206,16 +207,16 @@ new class extends Component {
                 ->whereDate('schedules.date', $draggedNewDate)
                 ->when(
                     $this->schedule_set_id !== null,
-                    fn($q) => $q->where('schedules.schedule_set_id', $this->schedule_set_id)
+                    fn ($q) => $q->where('schedules.schedule_set_id', $this->schedule_set_id)
                 )
                 ->whereNotIn('schedules.id', [$draggedId, $targetId])
                 ->pluck('shifts.sort_order');
 
             $hasConflict = $existingSortOrders->contains(
-                fn($sortOrder) => abs($sortOrder - $draggedNewShiftSortOrder) === 1
+                fn ($sortOrder) => abs($sortOrder - $draggedNewShiftSortOrder) === 1
             ) || $existingSortOrders->contains(
-                        fn($sortOrder) => abs($sortOrder - $targetNewShiftSortOrder) === 1
-                    );
+                fn ($sortOrder) => abs($sortOrder - $targetNewShiftSortOrder) === 1
+            );
 
             if ($hasConflict) {
                 $this->toast("Tidak bisa menukar: melanggar aturan jeda ≥ 1 shift untuk pegawai {$draggedSchedule->employee->name}.", false);
@@ -288,7 +289,7 @@ new class extends Component {
             ->whereDate('schedules.date', $date)
             ->when(
                 $this->schedule_set_id !== null,
-                fn($q) => $q->where('schedules.schedule_set_id', $this->schedule_set_id)
+                fn ($q) => $q->where('schedules.schedule_set_id', $this->schedule_set_id)
             )
             ->orderBy('shifts.sort_order')
             ->orderBy('schedules.id')
@@ -310,7 +311,7 @@ new class extends Component {
 
     public function publishAll(): void
     {
-        Schedule::when($this->schedule_set_id !== null, fn($q) => $q->where('schedule_set_id', $this->schedule_set_id))
+        Schedule::when($this->schedule_set_id !== null, fn ($q) => $q->where('schedule_set_id', $this->schedule_set_id))
             ->whereBetween('date', [$this->date_from, $this->date_to])
             ->draft()
             ->update(['status' => 'published']);
@@ -340,22 +341,22 @@ new class extends Component {
 
         // Load schedules indexed by [shift_id][date]
         $schedulesRaw = Schedule::with(['employee', 'shift'])
-            ->when($this->schedule_set_id !== null, fn($q) => $q->where('schedule_set_id', $this->schedule_set_id))
+            ->when($this->schedule_set_id !== null, fn ($q) => $q->where('schedule_set_id', $this->schedule_set_id))
             ->whereDate('date', '>=', $this->date_from)
             ->whereDate('date', '<=', $this->date_to)
             ->get();
 
         $hoursAndCountByEmployee = $schedulesRaw
             ->groupBy('employee_id')
-            ->map(fn($items) => [
+            ->map(fn ($items) => [
                 'shift_count' => $items->count(),
                 'normal_count' => $items->where('is_overtime', false)->count(),
                 'overtime_count' => $items->where('is_overtime', true)->count(),
-                'total_hours' => (float) $items->sum(fn($s) => (float) ($s->shift?->duration_hours ?? 0)),
+                'total_hours' => (float) $items->sum(fn ($s) => (float) ($s->shift?->duration_hours ?? 0)),
             ]);
 
         $employeeSummaries = $employees
-            ->map(fn($employee) => [
+            ->map(fn ($employee) => [
                 'id' => $employee->id,
                 'name' => $employee->name,
                 'color' => $employee->color ?? '#00ADB5',
@@ -372,7 +373,7 @@ new class extends Component {
             foreach ($dates as $date) {
                 $key = $date->toDateString();
                 $grid[$shift->id][$key] = $schedulesRaw->filter(
-                    fn($s) => $s->shift_id === $shift->id && $s->date->toDateString() === $key
+                    fn ($s) => $s->shift_id === $shift->id && $s->date->toDateString() === $key
                 )->values();
             }
         }

@@ -80,6 +80,19 @@
                         Shift
                     </a>
                 </div>
+                @auth
+                    <div class="nav-section nav-section-account">
+                        <p class="nav-label">Akun</p>
+                        <div class="nav-item nav-item-static">
+                            <span>{{ auth()->user()->name }}</span>
+                            <span class="text-muted">{{ auth()->user()->email }}</span>
+                        </div>
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button type="submit" class="btn btn-secondary btn-block">Keluar</button>
+                        </form>
+                    </div>
+                @endauth
             </nav>
         </aside>
 

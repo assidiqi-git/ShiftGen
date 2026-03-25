@@ -3,5 +3,5 @@
 test('returns a successful response', function () {
     $response = $this->get('/');
 
-    $response->assertRedirect(route('schedule.manage'));
+    $response->assertRedirect(route('login'));
 });

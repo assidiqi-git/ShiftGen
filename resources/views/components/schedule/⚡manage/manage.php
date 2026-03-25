@@ -4,7 +4,8 @@ use App\Models\ScheduleSet;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-new class extends Component {
+new class extends Component
+{
     use WithPagination;
 
     public ?int $deletingId = null;
