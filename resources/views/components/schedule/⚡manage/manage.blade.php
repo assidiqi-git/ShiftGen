@@ -70,10 +70,10 @@
                         <tr wire:key="set-{{ $set->id }}">
                             <td class="text-muted">{{ $set->id }}</td>
                             <td class="font-medium">{{ $set->name }}</td>
-                            <td>
-                                <span class="badge">{{ \Carbon\Carbon::parse($set->date_from)->format('d M Y') }}</span>
+                            <td class="font-medium">
+                                {{ \Carbon\Carbon::parse($set->date_from)->format('d M Y') }}
                                 —
-                                <span class="badge">{{ \Carbon\Carbon::parse($set->date_to)->format('d M Y') }}</span>
+                                {{ \Carbon\Carbon::parse($set->date_to)->format('d M Y') }}
                             </td>
                             <td>
                                 @if ($set->status === 'published')

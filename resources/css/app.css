@@ -1025,6 +1025,8 @@ body.sidebar-open .sidebar-backdrop {
 }
 
 .schedule-cell {
+    background: var(--bg-elevated);
+
     padding: 6px;
     vertical-align: top;
     border-bottom: 1px solid var(--border);
