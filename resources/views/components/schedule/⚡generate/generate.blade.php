@@ -30,6 +30,14 @@
     <div class="card">
         <div class="card-body">
             <form wire:submit="generate" id="generate-form">
+                <div class="form-group">
+                    <label class="form-label" for="schedule-name">Nama Jadwal (opsional)</label>
+                    <input id="schedule-name" type="text" wire:model="name"
+                        class="form-input {{ $errors->has('name') ? 'input-error' : '' }}"
+                        placeholder="Kosongkan untuk nama otomatis" />
+                    @error('name') <span class="form-error">{{ $message }}</span> @enderror
+                </div>
+
                 <div class="form-grid-2">
                     <div class="form-group">
                         <label class="form-label" for="date-from">Tanggal Mulai</label>

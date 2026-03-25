@@ -9,6 +9,8 @@ use Livewire\Component;
 
 new class extends Component
 {
+    public string $name = '';
+
     public string $date_from = '';
 
     public string $date_to = '';
@@ -28,6 +30,7 @@ new class extends Component
     protected function rules(): array
     {
         return [
+            'name' => 'nullable|string|max:120',
             'date_from' => 'required|date',
             'date_to' => 'required|date|after_or_equal:date_from',
         ];
@@ -52,8 +55,14 @@ new class extends Component
 
         try {
             $shiftCount = Shift::count();
+
+            $name = trim($this->name);
+            if ($name === '') {
+                $name = 'Jadwal '.$from->toDateString().' – '.$to->toDateString();
+            }
+
             $set = ScheduleSet::create([
-                'name' => 'Jadwal '.$from->toDateString().' – '.$to->toDateString(),
+                'name' => $name,
                 'date_from' => $from->toDateString(),
                 'date_to' => $to->toDateString(),
                 'status' => 'draft',
