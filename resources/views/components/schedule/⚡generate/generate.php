@@ -7,7 +7,8 @@ use App\Services\ScheduleGeneratorService;
 use Carbon\Carbon;
 use Livewire\Component;
 
-new class extends Component {
+new class extends Component
+{
     public string $name = '';
 
     public string $date_from = '';
@@ -59,7 +60,7 @@ new class extends Component {
 
             $name = trim($this->name);
             if ($name === '') {
-                $name = 'Jadwal ' . $from->toDateString() . ' – ' . $to->toDateString();
+                $name = 'Jadwal '.$from->toDateString().' – '.$to->toDateString();
             }
 
             $set = ScheduleSet::create([

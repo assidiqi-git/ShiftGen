@@ -118,7 +118,7 @@
 
                     <tr class="employee-pool-row">
                         <th class="shift-header-cell">Pegawai</th>
-                        <td colspan="{{ count($dates) + 2 }}" class="employee-name-cell" style="padding: 10px 12px;">
+                        <td colspan="{{ count($dates) }}" class="employee-name-cell" style="padding: 10px 12px;">
                             <div class="employee-pool" style="display: flex; flex-wrap: wrap; gap: 30px;">
                                 @foreach ($employees as $employee)
                                     @php
@@ -148,7 +148,7 @@
 
                     @if ($shifts->isEmpty())
                         <tr>
-                            <td colspan="32" class="empty-state">
+                            <td colspan="{{ count($dates) + 1 }}" class="empty-state">
                                 Belum ada shift atau jadwal. <a href="{{ route('schedule.generate') }}"
                                     wire:navigate>Generate sekarang →</a>
                             </td>
