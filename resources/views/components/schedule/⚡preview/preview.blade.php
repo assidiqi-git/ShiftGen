@@ -1,4 +1,17 @@
 <div x-data="schedulePreview()" x-on:dragover.prevent x-on:drop="handleDrop($event, null, null)">
+    <div x-show="isDropping" x-transition.opacity style="display: none;"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/35 backdrop-blur-[1px]">
+        <div class="rounded-xl bg-white/90 px-4 py-3 shadow-lg ring-1 ring-black/10">
+            <div class="flex items-center gap-3">
+                <svg class="h-5 w-5 animate-spin text-slate-700" xmlns="http://www.w3.org/2000/svg" fill="none"
+                    viewBox="0 0 24 24" aria-hidden="true">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8v4a4 4 0 0 0-4 4H4z"></path>
+                </svg>
+                <div class="text-sm font-medium text-slate-800">Memproses perubahan jadwal...</div>
+            </div>
+        </div>
+    </div>
     <div class="page-header">
         <div>
             <h1 class="page-title">Preview Jadwal</h1>
@@ -221,6 +234,7 @@
         draggingId: null,
         sourceDate: null,
         draggingEmployeeId: null,
+        isDropping: false,
 
         startDrag(event, scheduleId, date) {
             this.draggingId = scheduleId;
@@ -247,9 +261,10 @@
             event.currentTarget.classList.remove('drop-target');
         },
 
-        handleDrop(event, shiftId, date, targetScheduleId = null) {
+        async handleDrop(event, shiftId, date, targetScheduleId = null) {
             event.currentTarget?.classList?.remove('drop-target');
             if (!shiftId || !date) return;
+            if (this.isDropping) return;
 
             if (this.draggingEmployeeId) {
                 const empId = this.draggingEmployeeId;
@@ -257,7 +272,12 @@
                 this.draggingId = null;
                 this.sourceDate = null;
                 if (targetScheduleId) {
-                    this.$wire.replaceScheduleEmployee(targetScheduleId, empId);
+                    this.isDropping = true;
+                    try {
+                        await this.$wire.replaceScheduleEmployee(targetScheduleId, empId);
+                    } finally {
+                        this.isDropping = false;
+                    }
                 }
                 return;
             }
@@ -270,10 +290,15 @@
             this.draggingId = null;
             this.sourceDate = null;
 
-            if (targetScheduleId && targetScheduleId !== draggedId) {
-                this.$wire.swapSchedule(draggedId, targetScheduleId);
-            } else {
-                this.$wire.updateSchedule(draggedId, shiftId, date);
+            this.isDropping = true;
+            try {
+                if (targetScheduleId && targetScheduleId !== draggedId) {
+                    await this.$wire.swapSchedule(draggedId, targetScheduleId);
+                } else {
+                    await this.$wire.updateSchedule(draggedId, shiftId, date);
+                }
+            } finally {
+                this.isDropping = false;
             }
         },
 
