@@ -136,8 +136,8 @@
                         <tr wire:key="shift-{{ $shift->id }}">
                             <td class="text-muted">{{ $shift->sort_order }}</td>
                             <td class="font-medium">{{ $shift->name }}</td>
-                            <td>{{ \Carbon\Carbon::createFromFormat('H:i', $shift->start_time)->format('H:i') }}</td>
-                            <td>{{ \Carbon\Carbon::createFromFormat('H:i', $shift->end_time)->format('H:i') }}</td>
+                            <td>{{ \Carbon\Carbon::parse($shift->start_time)->format('H:i') }}</td>
+                            <td>{{ \Carbon\Carbon::parse($shift->end_time)->format('H:i') }}</td>
                             <td><span class="badge badge-purple">{{ number_format($shift->duration_hours, 2) }} jam</span>
                             </td>
                             <td>

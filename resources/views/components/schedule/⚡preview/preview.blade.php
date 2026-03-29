@@ -83,10 +83,9 @@
                             <td class="shift-label-cell">
                                 <div class="shift-label">
                                     <span class="shift-name">{{ $shift->name }}</span>
-                                    <span
-                                        class="shift-time">{{ \Carbon\Carbon::createFromFormat('H:i', $shift->start_time)->format('H:i') }}
+                                    <span class="shift-time">{{ \Carbon\Carbon::parse($shift->start_time)->format('H:i') }}
                                         –
-                                        {{ \Carbon\Carbon::createFromFormat('H:i', $shift->end_time)->format('H:i') }}</span>
+                                        {{ \Carbon\Carbon::parse($shift->end_time)->format('H:i') }}</span>
                                 </div>
                             </td>
                             @foreach ($dates as $date)
