@@ -17,9 +17,9 @@ beforeEach(function () {
     Employee::create(['name' => 'Charlie']);
 
     // Create 3 shifts with gap in sort_order (sort_order: 0, 1, 2)
-    Shift::create(['name' => 'Pagi',   'start_time' => '06:00', 'end_time' => '14:00', 'duration_hours' => 8, 'sort_order' => 0]);
-    Shift::create(['name' => 'Siang',  'start_time' => '14:00', 'end_time' => '22:00', 'duration_hours' => 8, 'sort_order' => 1]);
-    Shift::create(['name' => 'Malam',  'start_time' => '22:00', 'end_time' => '06:00', 'duration_hours' => 8, 'sort_order' => 2]);
+    Shift::create(['name' => 'Pagi', 'start_time' => '06:00', 'end_time' => '14:00', 'duration_hours' => 8, 'sort_order' => 0]);
+    Shift::create(['name' => 'Siang', 'start_time' => '14:00', 'end_time' => '22:00', 'duration_hours' => 8, 'sort_order' => 1]);
+    Shift::create(['name' => 'Malam', 'start_time' => '22:00', 'end_time' => '06:00', 'duration_hours' => 8, 'sort_order' => 2]);
 });
 
 it('generates correct number of schedule records for a single day', function () {
@@ -141,4 +141,29 @@ it('can generate schedules using only selected employees', function () {
 it('throws ScheduleConflictException when employee filter is empty array', function () {
     expect(fn () => app(ScheduleGeneratorService::class)->generate(Carbon::today(), Carbon::today(), null, []))
         ->toThrow(ScheduleConflictException::class);
+});
+
+it('does not persist any schedule changes when generation fails', function () {
+    Employee::where('name', '!=', 'Alice')->delete();
+    Shift::where('name', 'Malam')->delete();
+
+    $date = Carbon::parse('2026-04-01');
+    $employeeId = Employee::where('name', 'Alice')->value('id');
+    $shiftId = Shift::orderBy('sort_order')->value('id');
+
+    Schedule::create([
+        'employee_id' => $employeeId,
+        'shift_id' => $shiftId,
+        'date' => $date->toDateString(),
+        'is_overtime' => false,
+        'status' => 'draft',
+        'schedule_set_id' => null,
+    ]);
+
+    expect(Schedule::where('date', 'like', $date->toDateString().'%')->count())->toBe(1);
+
+    expect(fn () => app(ScheduleGeneratorService::class)->generate($date->copy(), $date->copy()))
+        ->toThrow(ScheduleConflictException::class);
+
+    expect(Schedule::where('date', 'like', $date->toDateString().'%')->count())->toBe(1);
 });

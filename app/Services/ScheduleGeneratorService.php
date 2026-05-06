@@ -8,6 +8,7 @@ use App\Models\Schedule;
 use App\Models\Shift;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class ScheduleGeneratorService
 {
@@ -20,37 +21,39 @@ class ScheduleGeneratorService
     /** @param  int[]|null  $employeeIds */
     public function generate(Carbon $from, Carbon $to, ?int $scheduleSetId = null, ?array $employeeIds = null): void
     {
-        $this->shifts = Shift::orderBy('sort_order')->get();
-        if (is_array($employeeIds) && $employeeIds === []) {
-            throw new ScheduleConflictException('Pilih minimal 1 pegawai untuk dibuatkan jadwal.');
-        }
+        DB::transaction(function () use ($from, $to, $scheduleSetId, $employeeIds): void {
+            $this->shifts = Shift::orderBy('sort_order')->get();
+            if (is_array($employeeIds) && $employeeIds === []) {
+                throw new ScheduleConflictException('Pilih minimal 1 pegawai untuk dibuatkan jadwal.');
+            }
 
-        $this->employees = is_array($employeeIds)
-            ? Employee::query()->whereIn('id', $employeeIds)->get()
-            : Employee::all();
+            $this->employees = is_array($employeeIds)
+                ? Employee::query()->whereIn('id', $employeeIds)->get()
+                : Employee::all();
 
-        if ($this->shifts->isEmpty()) {
-            throw new ScheduleConflictException('Belum ada shift yang terdapat di master data. Tambahkan shift terlebih dahulu.');
-        }
+            if ($this->shifts->isEmpty()) {
+                throw new ScheduleConflictException('Belum ada shift yang terdapat di master data. Tambahkan shift terlebih dahulu.');
+            }
 
-        if ($this->employees->isEmpty()) {
-            throw new ScheduleConflictException(
-                is_array($employeeIds)
-                ? 'Tidak ada pegawai yang bisa digunakan untuk generate jadwal.'
-                : 'Belum ada pegawai yang terdaftar. Tambahkan pegawai terlebih dahulu.'
-            );
-        }
+            if ($this->employees->isEmpty()) {
+                throw new ScheduleConflictException(
+                    is_array($employeeIds)
+                    ? 'Tidak ada pegawai yang bisa digunakan untuk generate jadwal.'
+                    : 'Belum ada pegawai yang terdaftar. Tambahkan pegawai terlebih dahulu.'
+                );
+            }
 
-        $this->validateTotalHours();
+            $this->validateTotalHours();
 
-        // Track cumulative work hours per employee (for overtime assignment)
-        $workHours = $this->employees->mapWithKeys(fn ($e) => [$e->id => 0.0])->toArray();
+            $workHours = $this->employees->mapWithKeys(fn ($e) => [$e->id => 0.0])->toArray();
 
-        $current = $from->copy()->startOfDay();
-        while ($current->lte($to)) {
-            $this->generateForDay($current->copy(), $workHours, $scheduleSetId);
-            $current->addDay();
-        }
+            $current = $from->copy()->startOfDay();
+            $end = $to->copy()->startOfDay();
+            while ($current->lte($end)) {
+                $this->generateForDay($current->copy(), $workHours, $scheduleSetId);
+                $current->addDay();
+            }
+        });
     }
 
     /** @param array<int, float> $workHours */

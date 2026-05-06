@@ -8,19 +8,23 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (! Schema::hasTable('schedules') || Schema::hasColumn('schedules', 'schedule_set_id')) {
+            return;
+        }
+
         Schema::table('schedules', function (Blueprint $table) {
-            $table->foreignId('schedule_set_id')
-                ->nullable()
-                ->after('id')
-                ->constrained('schedule_sets')
-                ->cascadeOnDelete();
+            $table->unsignedBigInteger('schedule_set_id')->nullable()->after('id');
         });
     }
 
     public function down(): void
     {
+        if (! Schema::hasTable('schedules') || ! Schema::hasColumn('schedules', 'schedule_set_id')) {
+            return;
+        }
+
         Schema::table('schedules', function (Blueprint $table) {
-            $table->dropConstrainedForeignId('schedule_set_id');
+            $table->dropColumn('schedule_set_id');
         });
     }
 };
